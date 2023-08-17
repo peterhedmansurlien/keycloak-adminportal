@@ -86,7 +86,11 @@ public class UserAttributeLDAPStorageMapperFactory extends AbstractLDAPStorageMa
                 .property().name(UserAttributeLDAPStorageMapper.IS_BINARY_ATTRIBUTE).label("Is Binary Attribute")
                 .helpText("Should be true for binary LDAP attributes")
                 .type(ProviderConfigProperty.BOOLEAN_TYPE)
-                .defaultValue("false").add();
+                .defaultValue("false").add()
+                .property().name(UserAttributeLDAPStorageMapper.MEMBEROF_FILTER_STRING).label("Only get MemberOf starts with")
+                .helpText("Set a string that only will be added to user attributes if it begins with this. Empty will get all. Is Only Read from LDAP must be true.")
+                .type(ProviderConfigProperty.STRING_TYPE)
+                .defaultValue("").add();
         return config.build();
     }
 

@@ -64,6 +64,8 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
     public static final String IS_BINARY_ATTRIBUTE = "is.binary.attribute";
     public static final String ATTRIBUTE_DEFAULT_VALUE = "attribute.default.value";
     public static final String FORCE_DEFAULT_VALUE = "attribute.force.default";
+    public static final String MEMBEROF_FILTER_STRING = "attribute.memberof.filter.string";
+
 
     public UserAttributeLDAPStorageMapper(ComponentModel mapperModel, LDAPStorageProvider ldapProvider) {
         super(mapperModel, ldapProvider);
@@ -385,6 +387,15 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
 
                     Set<String> allLdapAttrValues = ldapUser.getAttributeAsSet(ldapAttrName);
                     if (allLdapAttrValues != null) {
+
+                        String memberofFilterString = mapperModel.getConfig().getFirst(MEMBEROF_FILTER_STRING);
+                        if(ldapAttrName.equals("memberOf") && !memberofFilterString.trim().isEmpty()){
+                            logger.debugf("found allLdapAttrValues '%s'", allLdapAttrValues);
+                            allLdapAttrValues = allLdapAttrValues.stream()
+                                    .filter(x->!x.toLowerCase().startsWith(memberofFilterString))
+                                    .collect(Collectors.toSet());
+                        }
+
                         attrs.put(userModelAttrName, new ArrayList<>(allLdapAttrValues));
                     } else {
                         attrs.remove(userModelAttrName);

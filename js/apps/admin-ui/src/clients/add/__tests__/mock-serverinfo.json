@@ -5440,6 +5440,14 @@
                  "type":"boolean",
                  "defaultValue":"false",
                  "secret":false
+              },
+              {
+                 "name": "attribute.memberof.filter.string",
+                 "label": "Only get MemberOf starts with",
+                 "helpText": "Set a string that only will be added to user attributes if it begins with this. Empty will get all. Is Only Read from LDAP must be true.",
+                 "type": "String",
+                 "defaultValue": "",
+                 "secret": false
               }
            ],
            "metadata":{
