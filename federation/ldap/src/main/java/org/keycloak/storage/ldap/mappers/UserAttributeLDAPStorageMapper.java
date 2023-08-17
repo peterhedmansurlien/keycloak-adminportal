@@ -361,7 +361,21 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
                 @Override
                 public String getFirstAttribute(String name) {
                     if (name.equalsIgnoreCase(userModelAttrName)) {
-                        return ldapUser.getAttributeAsString(ldapAttrName);
+
+                        logger.infof("getFirstAttribute ldapAttrName '%s'", ldapAttrName);
+
+                        String memberofFilterString = mapperModel.get(MEMBEROF_FILTER_STRING, "");
+                        logger.infof("memberofFilterString '%s'", memberofFilterString);
+
+                        String firstFoundAttribute = ldapUser.getAttributeAsString(ldapAttrName);
+
+                        logger.infof("found1 allLdapAttrValues '%s'", firstFoundAttribute);
+
+                        if(ldapAttrName.equals("memberOf") && !memberofFilterString.trim().isEmpty()){
+                            logger.infof("found2 allLdapAttrValues '%s'", firstFoundAttribute);
+                        }
+
+                        return firstFoundAttribute;
                     } else {
                         return super.getFirstAttribute(name);
                     }
@@ -371,6 +385,12 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
                 public Stream<String> getAttributeStream(String name) {
                     if (name.equalsIgnoreCase(userModelAttrName)) {
                         Collection<String> ldapAttrValue = ldapUser.getAttributeAsSet(ldapAttrName);
+
+                        logger.infof("ldapAttrName '%s'", ldapAttrName);
+
+                        logger.infof("getAttributeStream '%s'", ldapAttrValue);
+                        logger.infof("getAttributeStream '%s'", ldapAttrValue);
+
                         if (ldapAttrValue == null) {
                             return Stream.empty();
                         } else {
@@ -388,9 +408,15 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
                     Set<String> allLdapAttrValues = ldapUser.getAttributeAsSet(ldapAttrName);
                     if (allLdapAttrValues != null) {
 
-                        String memberofFilterString = mapperModel.getConfig().getFirst(MEMBEROF_FILTER_STRING);
+                        logger.infof(" getAttributes ldapAttrName '%s'", ldapAttrName);
+
+                        String memberofFilterString = mapperModel.get(MEMBEROF_FILTER_STRING, "");
+                        logger.infof("memberofFilterString '%s'", memberofFilterString);
+
+                        logger.infof("allLdapAttrValues '%s'", allLdapAttrValues);
+
                         if(ldapAttrName.equals("memberOf") && !memberofFilterString.trim().isEmpty()){
-                            logger.debugf("found allLdapAttrValues '%s'", allLdapAttrValues);
+                            logger.infof("found allLdapAttrValues '%s'", allLdapAttrValues);
                             allLdapAttrValues = allLdapAttrValues.stream()
                                     .filter(x->!x.toLowerCase().startsWith(memberofFilterString))
                                     .collect(Collectors.toSet());
