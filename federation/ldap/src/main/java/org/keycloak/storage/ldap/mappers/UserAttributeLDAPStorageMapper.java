@@ -36,14 +36,7 @@ import org.keycloak.storage.ldap.idm.model.LDAPObject;
 import org.keycloak.storage.ldap.idm.query.Condition;
 import org.keycloak.storage.ldap.idm.query.internal.LDAPQuery;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -96,6 +89,22 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
             // we don't have java property. Let's set attribute
             Set<String> ldapAttrValue = ldapUser.getAttributeAsSet(ldapAttrName);
             if (ldapAttrValue != null) {
+
+                if(ldapAttrName.equals("memberOf")) {
+
+                    String memberofFilterString = mapperModel.getConfig().getFirst(MEMBEROF_FILTER_STRING);
+                    List<String> filterItems = memberofFilterString != null ? Arrays.asList(memberofFilterString.split("\\s*,\\s*")) : new ArrayList<>();
+
+                    if(filterItems.size() > 0) {
+                        // remove none matching groups
+                        ldapAttrValue.removeIf(value -> filterItems.stream().noneMatch(s -> value.trim().contains(s.trim())));
+
+                        //make values in list pretty
+                        ldapAttrValue = makeAdGroupsPretty(ldapAttrValue);
+
+                    }
+                }
+
                 user.setAttribute(userModelAttrName, new ArrayList<>(ldapAttrValue));
             } else {
                 user.removeAttribute(userModelAttrName);
@@ -361,21 +370,7 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
                 @Override
                 public String getFirstAttribute(String name) {
                     if (name.equalsIgnoreCase(userModelAttrName)) {
-
-                        logger.infof("getFirstAttribute ldapAttrName '%s'", ldapAttrName);
-
-                        String memberofFilterString = mapperModel.get(MEMBEROF_FILTER_STRING, "");
-                        logger.infof("memberofFilterString '%s'", memberofFilterString);
-
-                        String firstFoundAttribute = ldapUser.getAttributeAsString(ldapAttrName);
-
-                        logger.infof("found1 allLdapAttrValues '%s'", firstFoundAttribute);
-
-                        if(ldapAttrName.equals("memberOf") && !memberofFilterString.trim().isEmpty()){
-                            logger.infof("found2 allLdapAttrValues '%s'", firstFoundAttribute);
-                        }
-
-                        return firstFoundAttribute;
+                        return ldapUser.getAttributeAsString(ldapAttrName);
                     } else {
                         return super.getFirstAttribute(name);
                     }
@@ -385,12 +380,6 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
                 public Stream<String> getAttributeStream(String name) {
                     if (name.equalsIgnoreCase(userModelAttrName)) {
                         Collection<String> ldapAttrValue = ldapUser.getAttributeAsSet(ldapAttrName);
-
-                        logger.infof("ldapAttrName '%s'", ldapAttrName);
-
-                        logger.infof("getAttributeStream '%s'", ldapAttrValue);
-                        logger.infof("getAttributeStream '%s'", ldapAttrValue);
-
                         if (ldapAttrValue == null) {
                             return Stream.empty();
                         } else {
@@ -407,21 +396,6 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
 
                     Set<String> allLdapAttrValues = ldapUser.getAttributeAsSet(ldapAttrName);
                     if (allLdapAttrValues != null) {
-
-                        logger.infof(" getAttributes ldapAttrName '%s'", ldapAttrName);
-
-                        String memberofFilterString = mapperModel.get(MEMBEROF_FILTER_STRING, "");
-                        logger.infof("memberofFilterString '%s'", memberofFilterString);
-
-                        logger.infof("allLdapAttrValues '%s'", allLdapAttrValues);
-
-                        if(ldapAttrName.equals("memberOf") && !memberofFilterString.trim().isEmpty()){
-                            logger.infof("found allLdapAttrValues '%s'", allLdapAttrValues);
-                            allLdapAttrValues = allLdapAttrValues.stream()
-                                    .filter(x->!x.toLowerCase().startsWith(memberofFilterString))
-                                    .collect(Collectors.toSet());
-                        }
-
                         attrs.put(userModelAttrName, new ArrayList<>(allLdapAttrValues));
                     } else {
                         attrs.remove(userModelAttrName);
@@ -522,6 +496,30 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
 
     private boolean isReadOnly() {
         return parseBooleanParameter(mapperModel, READ_ONLY);
+    }
+
+
+    private Set<String> makeAdGroupsPretty(Set<String> rawAdGroups) {
+        Set<String> userAdGroups = new HashSet<>();
+
+        for (String rawAdGroup : rawAdGroups) {
+
+            List<String> dividedNameParts = Arrays.asList(rawAdGroup.split("\\s*,\\s*"));
+
+            if(dividedNameParts.size() == 1) {
+                userAdGroups.add(dividedNameParts.get(0).trim());
+            }
+
+            for (String dividedNamePart : dividedNameParts) {
+                var cnNameParts = Arrays.asList(dividedNamePart.split("\\s*=\\s*"));
+                if(cnNameParts.get(0).equalsIgnoreCase("CN") && cnNameParts.size() > 1) {
+                    userAdGroups.add(cnNameParts.get(1).trim());
+
+                }
+            }
+        }
+
+        return userAdGroups;
     }
 
     protected void setPropertyOnUserModel(Property<Object> userModelProperty, UserModel user, String ldapAttrValue) {
