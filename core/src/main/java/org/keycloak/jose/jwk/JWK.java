@@ -96,6 +96,10 @@ public class JWK {
     }
 
     public void setPublicKeyUse(String publicKeyUse) {
+
+        if(publicKeyUse == null || publicKeyUse.trim().isEmpty())
+            publicKeyUse = "sig";
+
         this.publicKeyUse = publicKeyUse;
     }
 
