@@ -92,13 +92,19 @@ public class JWK {
     }
 
     public String getPublicKeyUse() {
-        return publicKeyUse;
+
+        String tempPublicKeyUse = publicKeyUse;
+
+        if(tempPublicKeyUse == null || tempPublicKeyUse.trim().isEmpty())
+            tempPublicKeyUse = Use.SIG.asString();
+
+        return tempPublicKeyUse;
     }
 
     public void setPublicKeyUse(String publicKeyUse) {
 
         if(publicKeyUse == null || publicKeyUse.trim().isEmpty())
-            publicKeyUse = "sig";
+            publicKeyUse = Use.SIG.asString();
 
         this.publicKeyUse = publicKeyUse;
     }
