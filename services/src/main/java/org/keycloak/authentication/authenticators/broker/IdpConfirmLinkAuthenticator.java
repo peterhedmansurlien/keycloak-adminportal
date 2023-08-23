@@ -17,6 +17,7 @@
 
 package org.keycloak.authentication.authenticators.broker;
 
+import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.AuthenticationFlowException;
@@ -39,9 +40,16 @@ import jakarta.ws.rs.core.Response;
  */
 public class IdpConfirmLinkAuthenticator extends AbstractIdpAuthenticator {
 
+    private static final Logger logger = Logger.getLogger(IdpReviewProfileAuthenticator.class);
+
     @Override
     protected void authenticateImpl(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
         AuthenticationSessionModel authSession = context.getAuthenticationSession();
+
+        logger.debugf("1 serializedCtx '%s' ", serializedCtx.getContextData());
+        logger.debugf("1 serializedCtx attri '%s' ", serializedCtx.getAttributes());
+        logger.debugf("1 brokerContext '%s' ", brokerContext.getContextData());
+        logger.debugf("1 brokerContext attri '%s' ", brokerContext.getAttributes());
 
         String existingUserInfo = authSession.getAuthNote(EXISTING_USER_INFO);
         if (existingUserInfo == null) {
@@ -62,6 +70,11 @@ public class IdpConfirmLinkAuthenticator extends AbstractIdpAuthenticator {
     @Override
     protected void actionImpl(AuthenticationFlowContext context, SerializedBrokeredIdentityContext serializedCtx, BrokeredIdentityContext brokerContext) {
         MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
+
+        logger.debugf("2 serializedCtx '%s' ", serializedCtx.getContextData());
+        logger.debugf("2 serializedCtx attri '%s' ", serializedCtx.getAttributes());
+        logger.debugf("2 brokerContext '%s' ", brokerContext.getContextData());
+        logger.debugf("2 brokerContext attri '%s' ", brokerContext.getAttributes());
 
         String action = formData.getFirst("submitAction");
         if (action != null && action.equals("updateProfile")) {
