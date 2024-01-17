@@ -14,19 +14,17 @@ import {
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { HelpItem } from "ui-shared";
+import { FormPanel, HelpItem } from "ui-shared";
 import { adminClient } from "../admin-client";
 import { useAlerts } from "../components/alert/Alerts";
 import { FormAccess } from "../components/form/FormAccess";
 import { KeycloakTextInput } from "../components/keycloak-text-input/KeycloakTextInput";
 import { PasswordInput } from "../components/password-input/PasswordInput";
-import { FormPanel } from "../components/scroll-form/FormPanel";
 import { useRealm } from "../context/realm-context/RealmContext";
 import { toUser } from "../user/routes/User";
 import { emailRegexPattern } from "../util";
 import { useCurrentUser } from "../utils/useCurrentUser";
 import useToggle from "../utils/useToggle";
-
 import "./realm-settings-section.css";
 
 type RealmSettingsEmailTabProps = {
@@ -93,7 +91,7 @@ export const RealmSettingsEmailTab = ({
       );
       addAlert(t("testConnectionSuccess"), AlertVariant.success);
     } catch (error) {
-      addError("realm-settings:testConnectionError", error);
+      addError("testConnectionError", error);
     }
     toggleTest();
   };
@@ -112,7 +110,7 @@ export const RealmSettingsEmailTab = ({
             fieldId="kc-display-name"
             isRequired
             validated={errors.smtpServer?.from ? "error" : "default"}
-            helperTextInvalid={t("users:emailInvalid")}
+            helperTextInvalid={t("emailInvalid")}
           >
             <KeycloakTextInput
               type="email"
@@ -132,7 +130,7 @@ export const RealmSettingsEmailTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("fromDisplayNameHelp")}
-                fieldLabelId="realm-settings:authentication"
+                fieldLabelId="authentication"
               />
             }
           >
@@ -147,7 +145,7 @@ export const RealmSettingsEmailTab = ({
             label={t("replyTo")}
             fieldId="kc-reply-to"
             validated={errors.smtpServer?.replyTo ? "error" : "default"}
-            helperTextInvalid={t("users:emailInvalid")}
+            helperTextInvalid={t("emailInvalid")}
           >
             <KeycloakTextInput
               type="email"
@@ -165,7 +163,7 @@ export const RealmSettingsEmailTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("replyToDisplayNameHelp")}
-                fieldLabelId="realm-settings:replyToDisplayName"
+                fieldLabelId="replyToDisplayName"
               />
             }
           >
@@ -181,7 +179,7 @@ export const RealmSettingsEmailTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("envelopeFromHelp")}
-                fieldLabelId="realm-settings:envelopeFrom"
+                fieldLabelId="envelopeFrom"
               />
             }
           >
@@ -304,7 +302,7 @@ export const RealmSettingsEmailTab = ({
                 labelIcon={
                   <HelpItem
                     helpText={t("passwordHelp")}
-                    fieldLabelId="realm-settings:password"
+                    fieldLabelId="password"
                   />
                 }
               >

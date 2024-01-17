@@ -132,7 +132,7 @@ export default function LdapMapperDetails() {
         }),
       );
     } catch (error) {
-      addError("user-federation:syncLDAPGroupsError", error);
+      addError("syncLDAPGroupsError", error);
     }
     refresh();
   };
@@ -295,6 +295,7 @@ export default function LdapMapperDetails() {
                 render={({ field }) => (
                   <Select
                     toggleId="kc-providerId"
+                    typeAheadAriaLabel={t("mapperType")}
                     required
                     onToggle={() =>
                       setIsMapperDropdownOpen(!isMapperDropdownOpen)

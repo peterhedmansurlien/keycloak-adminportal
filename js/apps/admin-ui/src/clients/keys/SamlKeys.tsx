@@ -16,13 +16,12 @@ import { saveAs } from "file-saver";
 import { Fragment, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { HelpItem } from "ui-shared";
+import { FormPanel, HelpItem } from "ui-shared";
 
 import { adminClient } from "../../admin-client";
 import { useAlerts } from "../../components/alert/Alerts";
 import { useConfirmDialog } from "../../components/confirm-dialog/ConfirmDialog";
 import { FormAccess } from "../../components/form/FormAccess";
-import { FormPanel } from "../../components/scroll-form/FormPanel";
 import { convertAttributeNameToForm } from "../../util";
 import { useFetch } from "../../utils/useFetch";
 import useToggle from "../../utils/useToggle";
@@ -95,10 +94,7 @@ const KeySection = ({
         <FormAccess role="manage-clients" isHorizontal>
           <FormGroup
             labelIcon={
-              <HelpItem
-                helpText={t(`${key}Help`)}
-                fieldLabelId={`clients:${key}`}
-              />
+              <HelpItem helpText={t(`${key}Help`)} fieldLabelId={key} />
             }
             label={t(key)}
             fieldId={key}

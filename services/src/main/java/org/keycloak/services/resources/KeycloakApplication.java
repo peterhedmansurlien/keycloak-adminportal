@@ -33,7 +33,8 @@ import org.keycloak.models.ModelDuplicateException;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserProvider;
-import org.keycloak.models.locking.GlobalLockProvider;
+import org.keycloak.models.dblock.DBLockManager;
+import org.keycloak.models.dblock.DBLockProvider;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.models.utils.PostMigrationEvent;
 import org.keycloak.models.utils.RepresentationToModel;
@@ -66,15 +67,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
 public class KeycloakApplication extends Application {
-
-    public static final AtomicBoolean BOOTSTRAP_ADMIN_USER = new AtomicBoolean(false);
 
     private static final Logger logger = Logger.getLogger(KeycloakApplication.class);
 
@@ -113,6 +111,12 @@ public class KeycloakApplication extends Application {
             singletons.add(new ObjectMapperResolver());
             classes.add(WelcomeResource.class);
 
+            if (Profile.isFeatureEnabled(Profile.Feature.MULTI_SITE)) {
+                // If we are running in multi-site mode, we need to add a resource which to expose
+                // an endpoint for the load balancer to gather information whether this site should receive requests or not.
+                classes.add(LoadBalancerResource.class);
+            }
+
             platform.onStartup(this::startup);
             platform.onShutdown(this::shutdown);
 
@@ -128,40 +132,24 @@ public class KeycloakApplication extends Application {
 
         ExportImportManager[] exportImportManager = new ExportImportManager[1];
 
-        // Release all locks acquired by currently used GlobalLockProvider if keycloak.globalLock.forceUnlock is equal
-        //   to true. This can be used to recover from a state where there are some stale locks that were not correctly
-        //   unlocked
-        if (Boolean.getBoolean("keycloak.globalLock.forceUnlock")) {
-            KeycloakModelUtils.runJobInTransaction(sessionFactory, new KeycloakSessionTask() {
-                @Override
-                public void run(KeycloakSession session) {
-                    GlobalLockProvider locks = session.getProvider(GlobalLockProvider.class);
-                    locks.forceReleaseAllLocks();
-                }
-            });
-        }
-
         KeycloakModelUtils.runJobInTransaction(sessionFactory, new KeycloakSessionTask() {
             @Override
             public void run(KeycloakSession session) {
-                GlobalLockProvider locks = session.getProvider(GlobalLockProvider.class);
-                exportImportManager[0] = locks.withLock(GlobalLockProvider.Constants.KEYCLOAK_BOOT, innerSession -> bootstrap());
+                DBLockManager dbLockManager = new DBLockManager(session);
+                dbLockManager.checkForcedUnlock();
+                DBLockProvider dbLock = dbLockManager.getDBLock();
+                dbLock.waitForLock(DBLockProvider.Namespace.KEYCLOAK_BOOT);
+                try {
+                    exportImportManager[0] = bootstrap();
+                } finally {
+                    dbLock.releaseLock();
+                }
             }
         });
 
         if (exportImportManager[0].isRunExport()) {
             exportImportManager[0].runExport();
         }
-
-        KeycloakModelUtils.runJobInTransaction(sessionFactory, new KeycloakSessionTask() {
-
-            @Override
-            public void run(KeycloakSession session) {
-                boolean shouldBootstrapAdmin = new ApplianceBootstrap(session).isNoMasterUser();
-                BOOTSTRAP_ADMIN_USER.set(shouldBootstrapAdmin);
-            }
-
-        });
 
         sessionFactory.publish(new PostMigrationEvent(sessionFactory));
     }

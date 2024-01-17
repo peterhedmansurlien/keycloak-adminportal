@@ -6,6 +6,7 @@ import {
   ButtonVariant,
   Divider,
   DropdownItem,
+  DropdownSeparator,
   Form,
   PageSection,
   Tab,
@@ -13,9 +14,16 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import { useMemo, useState } from "react";
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useForm,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import { ScrollForm } from "ui-shared";
 
 import { adminClient } from "../../admin-client";
 import { useAlerts } from "../../components/alert/Alerts";
@@ -30,7 +38,6 @@ import {
   RoutableTabs,
   useRoutableTab,
 } from "../../components/routable-tabs/RoutableTabs";
-import { ScrollForm } from "../../components/scroll-form/ScrollForm";
 import {
   Action,
   KeycloakDataTable,
@@ -79,6 +86,23 @@ const Header = ({ onChange, value, save, toggleDeleteDialog }: HeaderProps) => {
   const { t } = useTranslation();
   const { alias: displayName } = useParams<{ alias: string }>();
   const [provider, setProvider] = useState<IdentityProviderRepresentation>();
+  const { addAlert, addError } = useAlerts();
+  const { setValue, formState, control } = useFormContext();
+
+  const validateSignature = useWatch({
+    control,
+    name: "config.validateSignature",
+  });
+
+  const useMetadataDescriptorUrl = useWatch({
+    control,
+    name: "config.useMetadataDescriptorUrl",
+  });
+
+  const metadataDescriptorUrl = useWatch({
+    control,
+    name: "config.metadataDescriptorUrl",
+  });
 
   useFetch(
     () => adminClient.identityProviders.findOne({ alias: displayName }),
@@ -92,7 +116,7 @@ const Header = ({ onChange, value, save, toggleDeleteDialog }: HeaderProps) => {
   );
 
   const [toggleDisableDialog, DisableConfirm] = useConfirmDialog({
-    titleKey: "identity-providers:disableProvider",
+    titleKey: "disableProvider",
     messageKey: t("disableConfirmIdentityProvider", { provider: displayName }),
     continueButtonLabel: "disable",
     onConfirm: () => {
@@ -100,6 +124,41 @@ const Header = ({ onChange, value, save, toggleDeleteDialog }: HeaderProps) => {
       save();
     },
   });
+
+  const importSamlKeys = async (
+    providerId: string,
+    metadataDescriptorUrl: string,
+  ) => {
+    try {
+      const result = await adminClient.identityProviders.importFromUrl({
+        providerId: providerId,
+        fromUrl: metadataDescriptorUrl,
+      });
+      if (result.signingCertificate) {
+        setValue(`config.signingCertificate`, result.signingCertificate);
+        addAlert(t("importKeysSuccess"), AlertVariant.success);
+      } else {
+        addError("importKeysError", t("importKeysErrorNoSigningCertificate"));
+      }
+    } catch (error) {
+      addError("importKeysError", error);
+    }
+  };
+
+  const reloadSamlKeys = async (alias: string) => {
+    try {
+      const result = await adminClient.identityProviders.reloadKeys({
+        alias: alias,
+      });
+      if (result) {
+        addAlert(t("reloadKeysSuccess"), AlertVariant.success);
+      } else {
+        addAlert(t("reloadKeysSuccessButFalse"), AlertVariant.warning);
+      }
+    } catch (error) {
+      addError("reloadKeysError", error);
+    }
+  };
 
   return (
     <>
@@ -114,6 +173,40 @@ const Header = ({ onChange, value, save, toggleDeleteDialog }: HeaderProps) => {
         )}
         divider={false}
         dropdownItems={[
+          ...(provider?.providerId?.includes("saml") &&
+          validateSignature === "true" &&
+          useMetadataDescriptorUrl === "true" &&
+          metadataDescriptorUrl &&
+          !formState.isDirty &&
+          value
+            ? [
+                <DropdownItem
+                  key="reloadKeys"
+                  onClick={() => reloadSamlKeys(provider.alias!)}
+                >
+                  {t("reloadKeys")}
+                </DropdownItem>,
+              ]
+            : provider?.providerId?.includes("saml") &&
+                validateSignature === "true" &&
+                useMetadataDescriptorUrl !== "true" &&
+                metadataDescriptorUrl &&
+                !formState.isDirty
+              ? [
+                  <DropdownItem
+                    key="importKeys"
+                    onClick={() =>
+                      importSamlKeys(
+                        provider.providerId!,
+                        metadataDescriptorUrl,
+                      )
+                    }
+                  >
+                    {t("importKeys")}
+                  </DropdownItem>,
+                ]
+              : []),
+          <DropdownSeparator key="separator" />,
           <DropdownItem key="delete" onClick={() => toggleDeleteDialog()}>
             {t("delete")}
           </DropdownItem>,
@@ -249,6 +342,7 @@ export default function DetailSettings() {
           providerId,
         },
       );
+      reset(p);
       addAlert(t("updateSuccessIdentityProvider"), AlertVariant.success);
     } catch (error) {
       addError("updateErrorIdentityProvider", error);
@@ -256,7 +350,7 @@ export default function DetailSettings() {
   };
 
   const [toggleDeleteDialog, DeleteConfirm] = useConfirmDialog({
-    titleKey: "identity-providers:deleteProvider",
+    titleKey: "deleteProvider",
     messageKey: t("deleteConfirmIdentityProvider", { provider: alias }),
     continueButtonLabel: "delete",
     continueButtonVariant: ButtonVariant.danger,
@@ -272,8 +366,8 @@ export default function DetailSettings() {
   });
 
   const [toggleDeleteMapperDialog, DeleteMapperConfirm] = useConfirmDialog({
-    titleKey: "identity-providers:deleteProviderMapper",
-    messageKey: t("identity-providers:deleteMapperConfirm", {
+    titleKey: "deleteProviderMapper",
+    messageKey: t("deleteMapperConfirm", {
       mapper: selectedMapper?.name,
     }),
     continueButtonLabel: "delete",
@@ -336,19 +430,12 @@ export default function DetailSettings() {
           isHorizontal
           onSubmit={handleSubmit(save)}
         >
-          {!isOIDC && !isSAML && (
-            <>
-              <GeneralSettings create={false} id={alias} />
-              {providerInfo && (
-                <DynamicComponents
-                  stringify
-                  properties={providerInfo.properties}
-                />
-              )}
-            </>
-          )}
+          {!isOIDC && !isSAML && <GeneralSettings create={false} id={alias} />}
           {isOIDC && <OIDCGeneralSettings />}
           {isSAML && <SamlGeneralSettings isAliasReadonly />}
+          {providerInfo && (
+            <DynamicComponents stringify properties={providerInfo.properties} />
+          )}
         </FormAccess>
       ),
     },
@@ -425,7 +512,11 @@ export default function DetailSettings() {
             title={<TabTitleText>{t("settings")}</TabTitleText>}
             {...settingsTab}
           >
-            <ScrollForm className="pf-u-px-lg" sections={sections} />
+            <ScrollForm
+              label={t("jumpToSection")}
+              className="pf-u-px-lg"
+              sections={sections}
+            />
           </Tab>
           <Tab
             id="mappers"
@@ -436,9 +527,9 @@ export default function DetailSettings() {
             <KeycloakDataTable
               emptyState={
                 <ListEmptyState
-                  message={t("identity-providers:noMappers")}
-                  instructions={t("identity-providers:noMappersInstructions")}
-                  primaryActionText={t("identity-providers:addMapper")}
+                  message={t("noMappers")}
+                  instructions={t("noMappersInstructions")}
+                  primaryActionText={t("addMapper")}
                   onPrimaryAction={() =>
                     navigate(
                       toIdentityProviderAddMapper({
@@ -453,8 +544,8 @@ export default function DetailSettings() {
               }
               loader={loader}
               key={key}
-              ariaLabelKey="identity-providers:mappersList"
-              searchPlaceholderKey="identity-providers:searchForMapper"
+              ariaLabelKey="mappersList"
+              searchPlaceholderKey="searchForMapper"
               toolbarItem={
                 <ToolbarItem>
                   <Button

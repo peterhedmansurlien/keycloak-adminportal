@@ -55,7 +55,15 @@ public final class Configuration {
         Optional<String> value = getRawPersistedProperty(name);
 
         if (value.isEmpty()) {
-            value = getRawPersistedProperty(getMappedPropertyName(name));
+            PropertyMapper<?> mapper = PropertyMappers.getMapper(name);
+
+            if (mapper != null) {
+                value = getRawPersistedProperty(mapper.getFrom());
+
+                if (value.isEmpty() && mapper.getTo() != null) {
+                    value = getRawPersistedProperty(mapper.getTo());
+                }
+            }
         }
 
         if (value.isEmpty()) {
@@ -122,7 +130,7 @@ public final class Configuration {
     }
 
     public static String getMappedPropertyName(String key) {
-        PropertyMapper mapper = PropertyMappers.getMapper(key);
+        PropertyMapper<?> mapper = PropertyMappers.getMapper(key);
 
         if (mapper == null) {
             return key;

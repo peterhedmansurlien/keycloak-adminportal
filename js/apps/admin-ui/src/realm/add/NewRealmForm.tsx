@@ -56,13 +56,13 @@ export default function NewRealmForm() {
       await refreshRealms();
       navigate(toDashboard({ realm: fields.realm }));
     } catch (error) {
-      addError("realm:saveRealmError", error);
+      addError("saveRealmError", error);
     }
   };
 
   return (
     <>
-      <ViewHeader titleKey="realm:createRealm" subKey="realm:realmExplain" />
+      <ViewHeader titleKey="createRealm" subKey="realmExplain" />
       <PageSection variant="light">
         <FormAccess
           isHorizontal
@@ -88,10 +88,6 @@ export default function NewRealmForm() {
               validated={errors.realm ? "error" : "default"}
               {...register("realm", {
                 required: { value: true, message: t("required") },
-                pattern: {
-                  value: /^[a-zA-Z0-9-_]+$/,
-                  message: t("invalidRealmName"),
-                },
               })}
             />
           </FormGroup>

@@ -60,18 +60,18 @@ export const ResetCredentialDialog = ({
       addAlert(t("credentialResetEmailSuccess"), AlertVariant.success);
       onClose();
     } catch (error) {
-      addError("users:credentialResetEmailError", error);
+      addError("credentialResetEmailError", error);
     }
   };
 
   return (
     <ConfirmDialogModal
       variant={ModalVariant.medium}
-      titleKey="users:credentialReset"
+      titleKey="credentialReset"
       open
       onCancel={onClose}
       toggleDialog={onClose}
-      continueButtonLabel="users:credentialResetConfirm"
+      continueButtonLabel="credentialResetConfirm"
       onConfirm={() => {
         handleSubmit(sendCredentialsResetEmail)();
       }}
@@ -82,12 +82,13 @@ export const ResetCredentialDialog = ({
         isHorizontal
         data-testid="credential-reset-modal"
       >
+        <RequiredActionMultiSelect
+          control={control}
+          name="actions"
+          label="resetAction"
+          help="resetActions"
+        />
         <FormProvider {...form}>
-          <RequiredActionMultiSelect
-            name="actions"
-            label="resetAction"
-            help="resetActions"
-          />
           <LifespanField />
         </FormProvider>
       </Form>

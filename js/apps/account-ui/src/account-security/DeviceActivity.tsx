@@ -15,7 +15,6 @@ import {
   Split,
   SplitItem,
   Title,
-  Tooltip,
 } from "@patternfly/react-core";
 import {
   DesktopIcon,
@@ -72,7 +71,9 @@ const DeviceActivity = () => {
   ) => {
     try {
       await deleteSession(session.id);
-      addAlert(t("signedOutSession", [session.browser, device.os]));
+      addAlert(
+        t("signedOutSession", { browser: session.browser, os: device.os }),
+      );
       refresh();
     } catch (error) {
       addError(t("errorSignOutMessage", { error }).toString());
@@ -113,17 +114,14 @@ const DeviceActivity = () => {
           </Title>
         </SplitItem>
         <SplitItem>
-          <Tooltip content={t("refreshPage")}>
-            <Button
-              aria-describedby="refresh page"
-              id="refresh-page"
-              variant="link"
-              onClick={() => refresh()}
-              icon={<SyncAltIcon />}
-            >
-              {t("refreshPage")}
-            </Button>
-          </Tooltip>
+          <Button
+            id="refresh-page"
+            variant="link"
+            onClick={() => refresh()}
+            icon={<SyncAltIcon />}
+          >
+            {t("refreshPage")}
+          </Button>
 
           {(devices.length > 1 || devices[0].sessions.length > 1) && (
             <ContinueCancelModal

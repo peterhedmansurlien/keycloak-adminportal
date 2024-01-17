@@ -30,6 +30,7 @@ export const LdapSettingsSearching = ({
   const [isSearchScopeDropdownOpen, setIsSearchScopeDropdownOpen] =
     useState(false);
   const [isEditModeDropdownOpen, setIsEditModeDropdownOpen] = useState(false);
+  const [isReferralDropdownOpen, setIsReferralDropdownOpen] = useState(false);
 
   return (
     <>
@@ -47,7 +48,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("editModeLdapHelp")}
-              fieldLabelId="user-federation:editMode"
+              fieldLabelId="editMode"
             />
           }
           fieldId="kc-edit-mode"
@@ -99,10 +100,7 @@ export const LdapSettingsSearching = ({
         <FormGroup
           label={t("usersDN")}
           labelIcon={
-            <HelpItem
-              helpText={t("usersDNHelp")}
-              fieldLabelId="user-federation:usersDn"
-            />
+            <HelpItem helpText={t("usersDNHelp")} fieldLabelId="usersDn" />
           }
           fieldId="kc-ui-users-dn"
           isRequired
@@ -138,7 +136,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("usernameLdapAttributeHelp")}
-              fieldLabelId="user-federation:usernameLdapAttribute"
+              fieldLabelId="usernameLdapAttribute"
             />
           }
           fieldId="kc-username-ldap-attribute"
@@ -176,7 +174,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("rdnLdapAttributeHelp")}
-              fieldLabelId="user-federation:rdnLdapAttribute"
+              fieldLabelId="rdnLdapAttribute"
             />
           }
           fieldId="kc-rdn-ldap-attribute"
@@ -213,7 +211,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("uuidLdapAttributeHelp")}
-              fieldLabelId="user-federation:uuidLdapAttribute"
+              fieldLabelId="uuidLdapAttribute"
             />
           }
           fieldId="kc-uuid-ldap-attribute"
@@ -251,7 +249,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("userObjectClassesHelp")}
-              fieldLabelId="user-federation:userObjectClasses"
+              fieldLabelId="userObjectClasses"
             />
           }
           fieldId="kc-user-object-classes"
@@ -289,7 +287,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("userLdapFilterHelp")}
-              fieldLabelId="user-federation:userLdapFilter"
+              fieldLabelId="userLdapFilter"
             />
           }
           fieldId="kc-user-ldap-filter"
@@ -325,7 +323,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("searchScopeHelp")}
-              fieldLabelId="user-federation:searchScope"
+              fieldLabelId="searchScope"
             />
           }
           fieldId="kc-search-scope"
@@ -364,7 +362,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("readTimeoutHelp")}
-              fieldLabelId="user-federation:readTimeout"
+              fieldLabelId="readTimeout"
             />
           }
           fieldId="kc-read-timeout"
@@ -382,7 +380,7 @@ export const LdapSettingsSearching = ({
           labelIcon={
             <HelpItem
               helpText={t("paginationHelp")}
-              fieldLabelId="user-federation:pagination"
+              fieldLabelId="pagination"
             />
           }
           fieldId="kc-ui-pagination"
@@ -403,6 +401,37 @@ export const LdapSettingsSearching = ({
                 labelOff={t("off")}
                 aria-label={t("pagination")}
               />
+            )}
+          ></Controller>
+        </FormGroup>
+        <FormGroup
+          label={t("referral")}
+          labelIcon={
+            <HelpItem helpText={t("referralHelp")} fieldLabelId="referral" />
+          }
+          fieldId="kc-referral"
+        >
+          <Controller
+            name="config.referral.0"
+            defaultValue=""
+            control={form.control}
+            render={({ field }) => (
+              <Select
+                toggleId="kc-referral"
+                onToggle={() =>
+                  setIsReferralDropdownOpen(!isReferralDropdownOpen)
+                }
+                isOpen={isReferralDropdownOpen}
+                onSelect={(_, value) => {
+                  field.onChange(value as string);
+                  setIsReferralDropdownOpen(false);
+                }}
+                selections={field.value}
+                variant={SelectVariant.single}
+              >
+                <SelectOption value="ignore" isPlaceholder />
+                <SelectOption value="follow" />
+              </Select>
             )}
           ></Controller>
         </FormGroup>

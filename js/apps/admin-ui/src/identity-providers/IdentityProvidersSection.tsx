@@ -1,4 +1,5 @@
 import type IdentityProviderRepresentation from "@keycloak/keycloak-admin-client/lib/defs/identityProviderRepresentation";
+import type { IdentityProvidersQuery } from "@keycloak/keycloak-admin-client/lib/resources/identityProviders";
 import {
   AlertVariant,
   Badge,
@@ -11,7 +12,6 @@ import {
   DropdownToggle,
   Gallery,
   PageSection,
-  Spinner,
   Split,
   SplitItem,
   Text,
@@ -24,7 +24,6 @@ import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { IconMapper } from "ui-shared";
-
 import { adminClient } from "../admin-client";
 import { useAlerts } from "../components/alert/Alerts";
 import { useConfirmDialog } from "../components/confirm-dialog/ConfirmDialog";
@@ -84,25 +83,30 @@ export default function IdentityProvidersSection() {
 
   const [addProviderOpen, setAddProviderOpen] = useState(false);
   const [manageDisplayDialog, setManageDisplayDialog] = useState(false);
-  const [providers, setProviders] =
-    useState<IdentityProviderRepresentation[]>();
+  const [hasProviders, setHasProviders] = useState(false);
   const [selectedProvider, setSelectedProvider] =
     useState<IdentityProviderRepresentation>();
   const { addAlert, addError } = useAlerts();
 
   useFetch(
-    async () => {
-      const provider = await adminClient.realms.findOne({ realm });
-      if (!provider) {
-        throw new Error(t("notFound"));
-      }
-      return provider.identityProviders!;
-    },
+    async () => adminClient.identityProviders.find({ max: 1 }),
     (providers) => {
-      setProviders(sortBy(providers, ["config.guiOrder", "alias"]));
+      setHasProviders(providers.length === 1);
     },
     [key],
   );
+
+  const loader = async (first?: number, max?: number, search?: string) => {
+    const params: IdentityProvidersQuery = {
+      first: first!,
+      max: max!,
+    };
+    if (search) {
+      params.search = search;
+    }
+    const providers = await adminClient.identityProviders.find(params);
+    return sortBy(providers, ["config.guiOrder", "alias"]);
+  };
 
   const navigateToCreate = (providerId: string) =>
     navigate(
@@ -136,7 +140,7 @@ export default function IdentityProvidersSection() {
     ));
 
   const [toggleDeleteDialog, DeleteConfirm] = useConfirmDialog({
-    titleKey: "identity-providers:deleteProvider",
+    titleKey: "deleteProvider",
     messageKey: t("deleteConfirm", { provider: selectedProvider?.alias }),
     continueButtonLabel: "delete",
     continueButtonVariant: ButtonVariant.danger,
@@ -145,9 +149,6 @@ export default function IdentityProvidersSection() {
         await adminClient.identityProviders.del({
           alias: selectedProvider!.alias!,
         });
-        setProviders([
-          ...providers!.filter((p) => p.alias !== selectedProvider?.alias),
-        ]);
         refresh();
         addAlert(t("deletedSuccessIdentityProvider"), AlertVariant.success);
       } catch (error) {
@@ -155,10 +156,6 @@ export default function IdentityProvidersSection() {
       }
     },
   });
-
-  if (!providers) {
-    return <Spinner />;
-  }
 
   return (
     <>
@@ -169,19 +166,18 @@ export default function IdentityProvidersSection() {
             setManageDisplayDialog(false);
             refresh();
           }}
-          providers={providers.filter((p) => p.enabled)}
         />
       )}
       <ViewHeader
         titleKey="identityProviders"
-        subKey="identity-providers:listExplain"
+        subKey="listExplain"
         helpUrl={helpUrls.identityProvidersUrl}
       />
       <PageSection
-        variant={providers.length === 0 ? "default" : "light"}
-        className={providers.length === 0 ? "" : "pf-u-p-0"}
+        variant={!hasProviders ? "default" : "light"}
+        className={!hasProviders ? "" : "pf-u-p-0"}
       >
-        {providers.length === 0 && (
+        {!hasProviders && (
           <>
             <TextContent>
               <Text component={TextVariants.p}>{t("getStarted")}</Text>
@@ -216,11 +212,13 @@ export default function IdentityProvidersSection() {
             ))}
           </>
         )}
-        {providers.length !== 0 && (
+        {hasProviders && (
           <KeycloakDataTable
-            loader={providers}
+            key={key}
+            loader={loader}
+            isPaginated
             ariaLabelKey="identityProviders"
-            searchPlaceholderKey="identity-providers:searchForProvider"
+            searchPlaceholderKey="searchForProvider"
             toolbarItem={
               <>
                 <ToolbarItem>
@@ -267,7 +265,7 @@ export default function IdentityProvidersSection() {
               },
               {
                 name: "providerId",
-                displayKey: "identity-providers:providerDetails",
+                displayKey: "providerDetails",
                 cellFormatters: [upperCaseFormatter()],
               },
             ]}

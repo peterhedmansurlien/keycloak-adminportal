@@ -59,6 +59,11 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
     name: "config.validateSignature",
   });
 
+  const useMetadataDescriptorUrl = useWatch({
+    control,
+    name: "config.useMetadataDescriptorUrl",
+  });
+
   const principalType = useWatch({
     control,
     name: "config.principalType",
@@ -72,7 +77,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("serviceProviderEntityIdHelp")}
-            fieldLabelId="identity-providers:serviceProviderEntityId"
+            fieldLabelId="serviceProviderEntityId"
           />
         }
       >
@@ -88,7 +93,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("identityProviderEntityIdHelp")}
-            fieldLabelId="identity-providers:identityProviderEntityId"
+            fieldLabelId="identityProviderEntityId"
           />
         }
       >
@@ -103,7 +108,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("ssoServiceUrlHelp")}
-            fieldLabelId="identity-providers:ssoServiceUrl"
+            fieldLabelId="ssoServiceUrl"
           />
         }
         fieldId="kc-sso-service-url"
@@ -133,7 +138,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("singleLogoutServiceUrlHelp")}
-            fieldLabelId="identity-providers:singleLogoutServiceUrl"
+            fieldLabelId="singleLogoutServiceUrl"
           />
         }
         fieldId="single-logout-service-url"
@@ -163,7 +168,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("nameIdPolicyFormatHelp")}
-            fieldLabelId="identity-providers:nameIdPolicyFormat"
+            fieldLabelId="nameIdPolicyFormat"
           />
         }
         fieldId="kc-nameIdPolicyFormat"
@@ -242,7 +247,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("principalTypeHelp")}
-            fieldLabelId="identity-providers:principalType"
+            fieldLabelId="principalType"
           />
         }
         fieldId="kc-principalType"
@@ -297,7 +302,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
           labelIcon={
             <HelpItem
               helpText={t("principalAttributeHelp")}
-              fieldLabelId="identity-providers:principalAttribute"
+              fieldLabelId="principalAttribute"
             />
           }
           fieldId="principalAttribute"
@@ -347,7 +352,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
             labelIcon={
               <HelpItem
                 helpText={t("signatureAlgorithmHelp")}
-                fieldLabelId="identity-providers:signatureAlgorithm"
+                fieldLabelId="signatureAlgorithm"
               />
             }
             fieldId="kc-signatureAlgorithm"
@@ -386,7 +391,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
             labelIcon={
               <HelpItem
                 helpText={t("samlSignatureKeyNameHelp")}
-                fieldLabelId="identity-providers:samlSignatureKeyName"
+                fieldLabelId="samlSignatureKeyName"
               />
             }
             fieldId="kc-samlSignatureKeyName"
@@ -482,14 +487,56 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         isReadOnly={readOnly}
       />
       {validateSignature === "true" && (
-        <FormGroupField label="validatingX509Certs">
-          <KeycloakTextArea
-            id="validatingX509Certs"
-            data-testid="validatingX509Certs"
+        <>
+          <FormGroup
+            label={t("metadataDescriptorUrl")}
+            labelIcon={
+              <HelpItem
+                helpText={t("metadataDescriptorUrlHelp")}
+                fieldLabelId="metadataDescriptorUrl"
+              />
+            }
+            isRequired={useMetadataDescriptorUrl === "true"}
+            validated={
+              errors.config?.metadataDescriptorUrl
+                ? ValidatedOptions.error
+                : ValidatedOptions.default
+            }
+            fieldId="metadataDescriptorUrl"
+            helperTextInvalid={t("required")}
+          >
+            <KeycloakTextInput
+              type="url"
+              id="metadataDescriptorUrl"
+              data-testid="metadataDescriptorUrl"
+              isReadOnly={readOnly}
+              validated={
+                errors.config?.metadataDescriptorUrl
+                  ? ValidatedOptions.error
+                  : ValidatedOptions.default
+              }
+              {...register("config.metadataDescriptorUrl", {
+                required: useMetadataDescriptorUrl === "true",
+              })}
+            />
+          </FormGroup>
+          <SwitchField
+            field="config.useMetadataDescriptorUrl"
+            label="useMetadataDescriptorUrl"
+            data-testid="useMetadataDescriptorUrl"
             isReadOnly={readOnly}
-            {...register("config.signingCertificate")}
-          ></KeycloakTextArea>
-        </FormGroupField>
+          />
+          {useMetadataDescriptorUrl !== "true" && (
+            <FormGroupField label="validatingX509Certs">
+              <KeycloakTextArea
+                id="validatingX509Certs"
+                data-testid="validatingX509Certs"
+                isReadOnly={readOnly}
+                {...register("config.signingCertificate")}
+              ></KeycloakTextArea>
+            </FormGroupField>
+          )}
+        </>
       )}
       <SwitchField
         field="config.signSpMetadata"
@@ -509,7 +556,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("allowedClockSkewHelp")}
-            fieldLabelId="identity-providers:allowedClockSkew"
+            fieldLabelId="allowedClockSkew"
           />
         }
         fieldId="allowedClockSkew"
@@ -548,7 +595,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("attributeConsumingServiceIndexHelp")}
-            fieldLabelId="identity-providers:attributeConsumingServiceIndex"
+            fieldLabelId="attributeConsumingServiceIndex"
           />
         }
         fieldId="attributeConsumingServiceIndex"
@@ -587,7 +634,7 @@ const Fields = ({ readOnly }: DescriptorSettingsProps) => {
         labelIcon={
           <HelpItem
             helpText={t("attributeConsumingServiceNameHelp")}
-            fieldLabelId="identity-providers:attributeConsumingServiceName"
+            fieldLabelId="attributeConsumingServiceName"
           />
         }
         fieldId="attributeConsumingServiceName"

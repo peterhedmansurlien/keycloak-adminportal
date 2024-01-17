@@ -13,6 +13,7 @@ import ProviderBaseGeneralSettingsPage from "../support/pages/admin-ui/manage/id
 import ProviderBaseAdvancedSettingsPage from "../support/pages/admin-ui/manage/identity_providers/ProviderBaseAdvancedSettingsPage";
 import ProviderGithubGeneralSettings from "../support/pages/admin-ui/manage/identity_providers/social/ProviderGithubGeneralSettings";
 import ProviderGoogleGeneralSettings from "../support/pages/admin-ui/manage/identity_providers/social/ProviderGoogleGeneralSettings";
+import ProviderMicrosoftGeneralSettings from "../support/pages/admin-ui/manage/identity_providers/social/ProviderMicrosoftGeneralSettings";
 import ProviderOpenshiftGeneralSettings from "../support/pages/admin-ui/manage/identity_providers/social/ProviderOpenshiftGeneralSettings";
 import ProviderPaypalGeneralSettings from "../support/pages/admin-ui/manage/identity_providers/social/ProviderPaypalGeneralSettings";
 import ProviderStackoverflowGeneralSettings from "../support/pages/admin-ui/manage/identity_providers/social/ProviderStackoverflowGeneralSettings";
@@ -50,6 +51,7 @@ describe("Identity provider test", () => {
     Facebook: new ProviderFacebookGeneralSettings(),
     Github: new ProviderGithubGeneralSettings(),
     Google: new ProviderGoogleGeneralSettings(),
+    Microsoft: new ProviderMicrosoftGeneralSettings(),
     "Openshift-v3": new ProviderOpenshiftGeneralSettings(),
     "Openshift-v4": new ProviderOpenshiftGeneralSettings(),
     Paypal: new ProviderPaypalGeneralSettings(),
@@ -81,8 +83,8 @@ describe("Identity provider test", () => {
         { testName: "Google", displayName: "Google", alias: "google" },
         { testName: "Instagram", displayName: "Instagram", alias: "instagram" },
         {
-          testName: "LinkedIn OpenID Connect",
-          displayName: "LinkedIn OpenID Connect",
+          testName: "LinkedIn",
+          displayName: "LinkedIn",
           alias: "linkedin-openid-connect",
         },
         { testName: "Microsoft", displayName: "Microsoft", alias: "microsoft" },
@@ -335,6 +337,15 @@ describe("Identity provider test", () => {
       advancedSettings.clickTrustEmailSwitch();
       advancedSettings.clickAccountLinkingOnlySwitch();
       advancedSettings.clickHideOnLoginPageSwitch();
+      advancedSettings.assertDoNotImportUsersSwitchTurnedOn(false);
+      advancedSettings.assertSyncModeShown(true);
+      advancedSettings.clickdoNotStoreUsersSwitch();
+      advancedSettings.assertDoNotImportUsersSwitchTurnedOn(true);
+      advancedSettings.assertSyncModeShown(false);
+      advancedSettings.clickdoNotStoreUsersSwitch();
+      advancedSettings.assertDoNotImportUsersSwitchTurnedOn(false);
+      advancedSettings.assertSyncModeShown(true);
+
       advancedSettings.clickEssentialClaimSwitch();
       advancedSettings.typeClaimNameInput("claim-name");
       advancedSettings.typeClaimValueInput("claim-value");
@@ -353,6 +364,7 @@ describe("Identity provider test", () => {
       advancedSettings.assertClaimValueInputEqual("claim-value");
 
       cy.findByTestId("idp-details-save").click();
+      masthead.checkNotificationMessage("Provider successfully updated");
     });
 
     it("should revert and save options", () => {

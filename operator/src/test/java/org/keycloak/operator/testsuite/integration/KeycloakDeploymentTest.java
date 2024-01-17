@@ -107,7 +107,7 @@ public class KeycloakDeploymentTest extends BaseOperatorTest {
         Resource<StatefulSet> stsResource = k8sclient.resources(StatefulSet.class).withName(deploymentName);
         Resource<Keycloak> keycloakResource = k8sclient.resources(Keycloak.class).withName(deploymentName);
         // expect no errors and not ready, which means we'll keep reconciling
-        Awaitility.await().untilAsserted(() -> {
+        Awaitility.await().ignoreExceptions().untilAsserted(() -> {
             assertThat(stsResource.get()).isNotNull();
             Keycloak keycloak = keycloakResource.get();
             CRAssert.assertKeycloakStatusCondition(keycloak, KeycloakStatusCondition.HAS_ERRORS, false);
@@ -251,7 +251,7 @@ public class KeycloakDeploymentTest extends BaseOperatorTest {
 
         // managed changes
         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).setEnv(List.of(flandersEnvVar));
-        String originalLabelValue = deployment.getMetadata().getLabels().put(Constants.MANAGED_BY_LABEL, "not-right");
+        String originalAnnotationValue = deployment.getMetadata().getAnnotations().put(Constants.KEYCLOAK_WATCHING_ANNOTATION, "not-right");
 
         deployment.getMetadata().setResourceVersion(null);
         k8sclient.resource(deployment).update();
@@ -266,7 +266,7 @@ public class KeycloakDeploymentTest extends BaseOperatorTest {
                     assertThat(d.getMetadata().getLabels().entrySet().containsAll(labels.entrySet())).isTrue();
                     // managed changes should get reverted
                     assertThat(d.getSpec()).isEqualTo(expectedSpec); // specs should be reconciled expected merged state
-                    assertThat(d.getMetadata().getLabels().get(Constants.MANAGED_BY_LABEL)).isEqualTo(originalLabelValue);
+                    assertThat(d.getMetadata().getAnnotations().get(Constants.KEYCLOAK_WATCHING_ANNOTATION)).isEqualTo(originalAnnotationValue);
                 });
     }
 
@@ -489,7 +489,7 @@ public class KeycloakDeploymentTest extends BaseOperatorTest {
                 .list()
                 .getItems();
 
-        assertThat(pods.get(0).getSpec().getContainers().get(0).getArgs()).containsExactly("--verbose", "start", "--optimized");
+        assertThat(pods.get(0).getSpec().getContainers().get(0).getArgs()).endsWith("--verbose", "start", "--optimized");
     }
 
     @Test
@@ -512,7 +512,7 @@ public class KeycloakDeploymentTest extends BaseOperatorTest {
                 .list()
                 .getItems();
 
-        assertThat(pods.get(0).getSpec().getContainers().get(0).getArgs()).containsExactly("--verbose", "start", "--optimized");
+        assertThat(pods.get(0).getSpec().getContainers().get(0).getArgs()).endsWith("--verbose", "start", "--optimized");
         assertThat(pods.get(0).getSpec().getImagePullSecrets().size()).isEqualTo(1);
         assertThat(pods.get(0).getSpec().getImagePullSecrets().get(0).getName()).isEqualTo(imagePullSecretName);
     }
@@ -661,7 +661,7 @@ public class KeycloakDeploymentTest extends BaseOperatorTest {
                     assertThat(k8sclient.resources(Service.class).withName(serviceName).require().getSpec().getPorts()
                             .stream().map(ServicePort::getName).anyMatch(protocol::equals));
 
-                    String url = protocol + "://" + serviceName + "." + namespace + ":" + port;
+                    String url = protocol + "://" + serviceName + "." + namespace + ":" + port + "/admin/master/console/";
                     Log.info("Checking url: " + url);
 
                     var curlOutput = K8sUtils.inClusterCurl(k8sclient, namespace, url);

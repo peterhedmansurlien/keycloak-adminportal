@@ -9,10 +9,8 @@ import {
 import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-
+import { FormPanel, HelpItem } from "ui-shared";
 import { FormAccess } from "../components/form/FormAccess";
-import { HelpItem } from "ui-shared";
-import { FormPanel } from "../components/scroll-form/FormPanel";
 import { TimeSelector } from "../components/time-selector/TimeSelector";
 import { convertToFormValues } from "../util";
 
@@ -60,7 +58,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("ssoSessionIdle")}
-                fieldLabelId="realm-settings:SSOSessionIdle"
+                fieldLabelId="SSOSessionIdle"
               />
             }
           >
@@ -86,7 +84,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("ssoSessionMax")}
-                fieldLabelId="realm-settings:SSOSessionMax"
+                fieldLabelId="SSOSessionMax"
               />
             }
           >
@@ -111,7 +109,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("ssoSessionIdleRememberMe")}
-                fieldLabelId="realm-settings:SSOSessionIdleRememberMe"
+                fieldLabelId="SSOSessionIdleRememberMe"
               />
             }
           >
@@ -136,7 +134,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("ssoSessionMaxRememberMe")}
-                fieldLabelId="realm-settings:SSOSessionMaxRememberMe"
+                fieldLabelId="SSOSessionMaxRememberMe"
               />
             }
           >
@@ -172,7 +170,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("clientSessionIdleHelp")}
-                fieldLabelId="realm-settings:clientSessionIdle"
+                fieldLabelId="clientSessionIdle"
               />
             }
           >
@@ -197,7 +195,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("clientSessionMaxHelp")}
-                fieldLabelId="realm-settings:clientSessionMax"
+                fieldLabelId="clientSessionMax"
               />
             }
           >
@@ -233,7 +231,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("offlineSessionIdleHelp")}
-                fieldLabelId="realm-settings:offlineSessionIdle"
+                fieldLabelId="offlineSessionIdle"
               />
             }
           >
@@ -260,7 +258,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("offlineSessionMaxLimitedHelp")}
-                fieldLabelId="realm-settings:offlineSessionMaxLimited"
+                fieldLabelId="offlineSessionMaxLimited"
               />
             }
           >
@@ -289,7 +287,7 @@ export const RealmSettingsSessionsTab = ({
               labelIcon={
                 <HelpItem
                   helpText={t("offlineSessionMaxHelp")}
-                  fieldLabelId="realm-settings:offlineSessionMax"
+                  fieldLabelId="offlineSessionMax"
                 />
               }
             >
@@ -327,7 +325,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("loginTimeoutHelp")}
-                fieldLabelId="realm-settings:loginTimeout"
+                fieldLabelId="loginTimeout"
               />
             }
           >
@@ -353,7 +351,7 @@ export const RealmSettingsSessionsTab = ({
             labelIcon={
               <HelpItem
                 helpText={t("loginActionTimeoutHelp")}
-                fieldLabelId="realm-settings:loginActionTimeout"
+                fieldLabelId="loginActionTimeout"
               />
             }
           >

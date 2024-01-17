@@ -1,3 +1,4 @@
+import { fetchWithError } from "@keycloak/keycloak-admin-client";
 import type IdentityProviderRepresentation from "@keycloak/keycloak-admin-client/lib/defs/identityProviderRepresentation";
 import { FormGroup, Title } from "@patternfly/react-core";
 import { useFormContext } from "react-hook-form";
@@ -47,7 +48,7 @@ export const SamlConnectSettings = () => {
     formData.append("file", new Blob([xml]));
 
     try {
-      const response = await fetch(
+      const response = await fetchWithError(
         `${addTrailingSlash(
           adminClient.baseUrl,
         )}admin/realms/${realm}/identity-provider/import-config`,
@@ -86,7 +87,7 @@ export const SamlConnectSettings = () => {
         labelIcon={
           <HelpItem
             helpText={t("serviceProviderEntityIdHelp")}
-            fieldLabelId="identity-providers:serviceProviderEntityId"
+            fieldLabelId="serviceProviderEntityId"
           />
         }
         isRequired
@@ -111,7 +112,7 @@ export const SamlConnectSettings = () => {
             labelIcon={
               <HelpItem
                 helpText={t("importConfigHelp")}
-                fieldLabelId="identity-providers:importConfig"
+                fieldLabelId="importConfig"
               />
             }
             validated={errors.discoveryError ? "error" : "default"}

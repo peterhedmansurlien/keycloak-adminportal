@@ -79,7 +79,7 @@ export const DiscoveryEndpointField = ({
                 ? "useDiscoveryEndpointHelp"
                 : "useEntityDescriptorHelp",
             )}
-            fieldLabelId="identity-providers:discoveryEndpoint"
+            fieldLabelId="discoveryEndpoint"
           />
         }
       >
@@ -110,15 +110,15 @@ export const DiscoveryEndpointField = ({
                   ? "discoveryEndpointHelp"
                   : "samlEntityDescriptorHelp",
               )}
-              fieldLabelId="identity-providers:discoveryEndpoint"
+              fieldLabelId="discoveryEndpoint"
             />
           }
           validated={
             errors.discoveryError || errors.discoveryEndpoint
               ? "error"
               : !discoveryResult
-              ? "default"
-              : "success"
+                ? "default"
+                : "success"
           }
           helperTextInvalid={
             errors.discoveryEndpoint
@@ -142,8 +142,8 @@ export const DiscoveryEndpointField = ({
               errors.discoveryError || errors.discoveryEndpoint
                 ? "error"
                 : !discoveryResult
-                ? "default"
-                : "success"
+                  ? "default"
+                  : "success"
             }
             customIconUrl={
               discovering

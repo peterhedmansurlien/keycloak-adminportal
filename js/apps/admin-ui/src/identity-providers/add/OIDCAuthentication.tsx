@@ -10,8 +10,10 @@ import { useTranslation } from "react-i18next";
 
 import { HelpItem } from "ui-shared";
 import { ClientIdSecret } from "../component/ClientIdSecret";
+import { SwitchField } from "../component/SwitchField";
 import { sortProviders } from "../../util";
 import { useServerInfo } from "../../context/server-info/ServerInfoProvider";
+import { TextField } from "../component/TextField";
 
 const clientAuthentications = [
   "client_secret_post",
@@ -40,7 +42,7 @@ export const OIDCAuthentication = ({ create = true }: { create?: boolean }) => {
         labelIcon={
           <HelpItem
             helpText={t("clientAuthenticationHelp")}
-            fieldLabelId="identity-providers:clientAuthentication"
+            fieldLabelId="clientAuthentication"
           />
         }
         fieldId="clientAuthentication"
@@ -85,7 +87,7 @@ export const OIDCAuthentication = ({ create = true }: { create?: boolean }) => {
         labelIcon={
           <HelpItem
             helpText={t("clientAssertionSigningAlgHelp")}
-            fieldLabelId="identity-providers:clientAssertionSigningAlg"
+            fieldLabelId="clientAssertionSigningAlg"
           />
         }
         fieldId="clientAssertionSigningAlg"
@@ -123,6 +125,19 @@ export const OIDCAuthentication = ({ create = true }: { create?: boolean }) => {
           )}
         />
       </FormGroup>
+      {(clientAuthMethod === "private_key_jwt" ||
+        clientAuthMethod === "client_secret_jwt") && (
+        <TextField
+          field="config.clientAssertionAudience"
+          label="clientAssertionAudience"
+        />
+      )}
+      {clientAuthMethod === "private_key_jwt" && (
+        <SwitchField
+          field="config.jwtX509HeadersEnabled"
+          label="jwtX509HeadersEnabled"
+        />
+      )}
     </>
   );
 };

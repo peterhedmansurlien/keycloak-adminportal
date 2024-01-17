@@ -15,6 +15,7 @@ import { HelpItem } from "ui-shared";
 
 import { adminClient } from "../../admin-client";
 import { useFetch } from "../../utils/useFetch";
+import useIsFeatureEnabled, { Feature } from "../../utils/useIsFeatureEnabled";
 import type { FieldProps } from "../component/FormGroupField";
 import { FormGroupField } from "../component/FormGroupField";
 import { SwitchField } from "../component/SwitchField";
@@ -42,12 +43,7 @@ const LoginFlow = ({
   return (
     <FormGroup
       label={t(label)}
-      labelIcon={
-        <HelpItem
-          helpText={t(`${label}Help`)}
-          fieldLabelId={`identity-providers:${label}`}
-        />
-      }
+      labelIcon={<HelpItem helpText={t(`${label}Help`)} fieldLabelId={label} />}
       fieldId={label}
     >
       <Controller
@@ -101,6 +97,7 @@ export const AdvancedSettings = ({ isOIDC, isSAML }: AdvancedSettingsProps) => {
   const {
     control,
     register,
+    setValue,
     formState: { errors },
   } = useFormContext<IdentityProviderRepresentation>();
   const [syncModeOpen, setSyncModeOpen] = useState(false);
@@ -110,6 +107,14 @@ export const AdvancedSettings = ({ isOIDC, isSAML }: AdvancedSettingsProps) => {
     defaultValue: "false",
   });
   const claimFilterRequired = filteredByClaim === "true";
+  const isFeatureEnabled = useIsFeatureEnabled();
+  const isTransientUsersEnabled = isFeatureEnabled(Feature.TransientUsers);
+  const transientUsers = useWatch({
+    control,
+    name: "config.doNotStoreUsers",
+    defaultValue: "false",
+  });
+  const syncModeAvailable = transientUsers === "false";
   return (
     <>
       {!isOIDC && !isSAML && (
@@ -166,11 +171,11 @@ export const AdvancedSettings = ({ isOIDC, isSAML }: AdvancedSettingsProps) => {
       {(!isSAML || isOIDC) && claimFilterRequired && (
         <>
           <FormGroup
-            label={t("identity-providers:claimFilterName")}
+            label={t("claimFilterName")}
             labelIcon={
               <HelpItem
                 helpText={t("claimFilterNameHelp")}
-                fieldLabelId="identity-providers:claimFilterName"
+                fieldLabelId="claimFilterName"
               />
             }
             fieldId="kc-claim-filter-name"
@@ -195,11 +200,11 @@ export const AdvancedSettings = ({ isOIDC, isSAML }: AdvancedSettingsProps) => {
             />
           </FormGroup>
           <FormGroup
-            label={t("identity-providers:claimFilterValue")}
+            label={t("claimFilterValue")}
             labelIcon={
               <HelpItem
                 helpText={t("claimFilterValueHelp")}
-                fieldLabelId="identity-providers:claimFilterName"
+                fieldLabelId="claimFilterName"
               />
             }
             fieldId="kc-claim-filter-value"
@@ -236,49 +241,72 @@ export const AdvancedSettings = ({ isOIDC, isSAML }: AdvancedSettingsProps) => {
         defaultValue=""
       />
 
-      <FormGroup
-        className="pf-u-pb-3xl"
-        label={t("syncMode")}
-        labelIcon={
-          <HelpItem
-            helpText={t("syncModeHelp")}
-            fieldLabelId="identity-providers:syncMode"
+      {isTransientUsersEnabled && (
+        <FormGroupField label="doNotStoreUsers">
+          <Controller
+            name="config.doNotStoreUsers"
+            defaultValue="false"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                id="doNotStoreUsers"
+                label={t("on")}
+                labelOff={t("off")}
+                isChecked={field.value === "true"}
+                onChange={(value) => {
+                  field.onChange(value.toString());
+                  // if field is checked, set sync mode to import
+                  if (value) {
+                    setValue("config.syncMode", "IMPORT");
+                  }
+                }}
+              />
+            )}
           />
-        }
-        fieldId="syncMode"
-      >
-        <Controller
-          name="config.syncMode"
-          defaultValue={syncModes[0].toUpperCase()}
-          control={control}
-          render={({ field }) => (
-            <Select
-              toggleId="syncMode"
-              required
-              direction="up"
-              onToggle={() => setSyncModeOpen(!syncModeOpen)}
-              onSelect={(_, value) => {
-                field.onChange(value as string);
-                setSyncModeOpen(false);
-              }}
-              selections={t(`syncModes.${field.value.toLowerCase()}`)}
-              variant={SelectVariant.single}
-              aria-label={t("syncMode")}
-              isOpen={syncModeOpen}
-            >
-              {syncModes.map((option) => (
-                <SelectOption
-                  selected={option === field.value}
-                  key={option}
-                  value={option.toUpperCase()}
-                >
-                  {t(`syncModes.${option}`)}
-                </SelectOption>
-              ))}
-            </Select>
-          )}
-        />
-      </FormGroup>
+        </FormGroupField>
+      )}
+      {syncModeAvailable && (
+        <FormGroup
+          className="pf-u-pb-3xl"
+          label={t("syncMode")}
+          labelIcon={
+            <HelpItem helpText={t("syncModeHelp")} fieldLabelId="syncMode" />
+          }
+          fieldId="syncMode"
+        >
+          <Controller
+            name="config.syncMode"
+            defaultValue={syncModes[0].toUpperCase()}
+            control={control}
+            render={({ field }) => (
+              <Select
+                toggleId="syncMode"
+                required
+                direction="up"
+                onToggle={() => setSyncModeOpen(!syncModeOpen)}
+                onSelect={(_, value) => {
+                  field.onChange(value as string);
+                  setSyncModeOpen(false);
+                }}
+                selections={t(`syncModes.${field.value.toLowerCase()}`)}
+                variant={SelectVariant.single}
+                aria-label={t("syncMode")}
+                isOpen={syncModeOpen}
+              >
+                {syncModes.map((option) => (
+                  <SelectOption
+                    selected={option === field.value}
+                    key={option}
+                    value={option.toUpperCase()}
+                  >
+                    {t(`syncModes.${option}`)}
+                  </SelectOption>
+                ))}
+              </Select>
+            )}
+          />
+        </FormGroup>
+      )}
     </>
   );
 };

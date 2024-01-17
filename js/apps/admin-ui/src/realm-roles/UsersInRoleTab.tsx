@@ -48,8 +48,9 @@ export const UsersInRoleTab = () => {
       <KeycloakDataTable
         isPaginated
         loader={loader}
-        ariaLabelKey="roles:roleList"
+        ariaLabelKey="roleList"
         searchPlaceholderKey=""
+        data-testid="users-in-role-table"
         toolbarItem={
           enabled && (
             <Popover
@@ -75,7 +76,7 @@ export const UsersInRoleTab = () => {
                   </Button>
                 </div>
               }
-              footerContent={t("roles:whoWillAppearPopoverFooterText")}
+              footerContent={t("whoWillAppearPopoverFooterText")}
             >
               <Button
                 variant="link"
@@ -118,22 +119,22 @@ export const UsersInRoleTab = () => {
         columns={[
           {
             name: "username",
-            displayKey: "roles:userName",
+            displayKey: "userName",
             cellFormatters: [emptyFormatter()],
           },
           {
             name: "email",
-            displayKey: "roles:email",
+            displayKey: "email",
             cellFormatters: [emptyFormatter()],
           },
           {
             name: "lastName",
-            displayKey: "roles:lastName",
+            displayKey: "lastName",
             cellFormatters: [emptyFormatter()],
           },
           {
             name: "firstName",
-            displayKey: "roles:firstName",
+            displayKey: "firstName",
             cellFormatters: [upperCaseFormatter(), emptyFormatter()],
           },
         ]}
