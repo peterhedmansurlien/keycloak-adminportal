@@ -17,6 +17,7 @@
 
 package org.keycloak.broker.oidc.mappers;
 
+import org.jboss.logging.Logger;
 import org.keycloak.broker.oidc.KeycloakOIDCIdentityProviderFactory;
 import org.keycloak.broker.oidc.OIDCIdentityProviderFactory;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
@@ -64,6 +65,8 @@ import static org.keycloak.broker.saml.mappers.UsernameTemplateMapper.getTarget;
  */
 public class UsernameTemplateMapper extends AbstractClaimMapper {
 
+    private static final Logger LOG = Logger.getLogger(UsernameTemplateMapper.class);
+
     public static final String[] COMPATIBLE_PROVIDERS = {
             KeycloakOIDCIdentityProviderFactory.PROVIDER_ID,
             OIDCIdentityProviderFactory.PROVIDER_ID,
@@ -82,6 +85,7 @@ public class UsernameTemplateMapper extends AbstractClaimMapper {
             StackoverflowIdentityProviderFactory.PROVIDER_ID,
             TwitterIdentityProviderFactory.PROVIDER_ID
     };
+
 
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
     private static final Set<IdentityProviderSyncMode> IDENTITY_PROVIDER_SYNC_MODES = new HashSet<>(Arrays.asList(IdentityProviderSyncMode.values()));
@@ -191,7 +195,10 @@ public class UsernameTemplateMapper extends AbstractClaimMapper {
         m.appendTail(sb);
 
         Target t = getTarget(mapperModel.getConfig().get(TARGET));
-        t.set(context, sb.toString());
+
+        LOG.debugv("IDP match username, will be convereted to lowercase when insering: {0}", sb.toString());
+
+        t.set(context, sb.toString().toLowerCase());
     }
 
     @Override

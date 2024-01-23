@@ -65,3 +65,8 @@ Before contributing to Keycloak, please read our [contributing guidelines](CONTR
 ## License
 
 * [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+
+## Build
+./mvnw versions:set -DnewVersion=23.0.4     
+./mvnw -pl quarkus/deployment,quarkus/dist -am -DskipTests clean install
