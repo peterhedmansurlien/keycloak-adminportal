@@ -976,10 +976,7 @@ public class LDAPStorageProvider implements UserStorageProvider,
 
     public LDAPObject loadLDAPUserByUsername(RealmModel realm, String username) {
         try (LDAPQuery ldapQuery = LDAPUtils.createQueryForUserSearch(this, realm)) {
-
             LDAPQueryConditionsBuilder conditionsBuilder = new LDAPQueryConditionsBuilder();
-
-            LDAPQuery ldapQuery2 = ldapQuery;
 
             String usernameMappedAttribute = this.ldapIdentityStore.getConfig().getUsernameLdapAttribute();
             Condition usernameCondition = conditionsBuilder.equal(usernameMappedAttribute, username);
@@ -987,16 +984,33 @@ public class LDAPStorageProvider implements UserStorageProvider,
 
             LDAPObject ldapUser = ldapQuery.getFirstResult();
 
+            if (logger.isDebugEnabled() && ldapUser != null) {
+                logger.debug("ldapUser: " + ldapUser.toString());
+            }
+
             if (ldapUser == null) {
 
-                usernameCondition = conditionsBuilder.equal("hsaIdentity", username);
-                ldapQuery2.addWhereCondition(usernameCondition);
+                try (LDAPQuery ldapQuery2 = LDAPUtils.createQueryForUserSearch(this, realm)) {
+                    LDAPQueryConditionsBuilder conditionsBuilder2 = new LDAPQueryConditionsBuilder();
 
-                ldapUser = ldapQuery2.getFirstResult();
+                    String usernameMappedAttribute2 = "hsaIdentity";
+                    Condition usernameCondition2 = conditionsBuilder2.equal(usernameMappedAttribute2, username.toUpperCase());
+                    ldapQuery2.addWhereCondition(usernameCondition2);
 
-                if (ldapUser == null) {
-                    return null;
+                    LDAPObject ldapUser2 = ldapQuery2.getFirstResult();
+
+                    if (logger.isDebugEnabled() && ldapUser2 != null) {
+                        logger.debug("ldapUser2: " + ldapUser2.toString());
+                    }
+
+                    if (ldapUser2 == null) {
+                        logger.debug("ldapUser2 is null");
+                        return null;
+                    }
+
+                    return ldapUser2;
                 }
+
 
             }
 
