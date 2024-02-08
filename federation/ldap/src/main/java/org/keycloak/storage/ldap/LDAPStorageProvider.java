@@ -976,15 +976,28 @@ public class LDAPStorageProvider implements UserStorageProvider,
 
     public LDAPObject loadLDAPUserByUsername(RealmModel realm, String username) {
         try (LDAPQuery ldapQuery = LDAPUtils.createQueryForUserSearch(this, realm)) {
+
             LDAPQueryConditionsBuilder conditionsBuilder = new LDAPQueryConditionsBuilder();
+
+            LDAPQuery ldapQuery2 = ldapQuery;
 
             String usernameMappedAttribute = this.ldapIdentityStore.getConfig().getUsernameLdapAttribute();
             Condition usernameCondition = conditionsBuilder.equal(usernameMappedAttribute, username);
             ldapQuery.addWhereCondition(usernameCondition);
 
             LDAPObject ldapUser = ldapQuery.getFirstResult();
+
             if (ldapUser == null) {
-                return null;
+
+                usernameCondition = conditionsBuilder.equal("hsaIdentity", username);
+                ldapQuery2.addWhereCondition(usernameCondition);
+
+                ldapUser = ldapQuery2.getFirstResult();
+
+                if (ldapUser == null) {
+                    return null;
+                }
+
             }
 
             return ldapUser;
