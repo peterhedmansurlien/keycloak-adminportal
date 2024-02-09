@@ -401,6 +401,22 @@ public class UserAttributeLDAPStorageMapper extends AbstractLDAPStorageMapper {
 
                     Set<String> allLdapAttrValues = ldapUser.getAttributeAsSet(ldapAttrName);
                     if (allLdapAttrValues != null) {
+
+                        if(ldapAttrName.equals("memberOf")) {
+
+                            String memberofFilterString = mapperModel.getConfig().getFirst(MEMBEROF_FILTER_STRING);
+                            List<String> filterItems = memberofFilterString != null ? Arrays.asList(memberofFilterString.split("\\s*,\\s*")) : new ArrayList<>();
+
+                            if(filterItems.size() > 0) {
+                                // remove none matching groups
+                                allLdapAttrValues.removeIf(value -> filterItems.stream().noneMatch(s -> value.trim().contains(s.trim())));
+
+                                //make values in list pretty
+                                allLdapAttrValues = makeAdGroupsPretty(allLdapAttrValues);
+
+                            }
+                        }
+
                         attrs.put(userModelAttrName, new ArrayList<>(allLdapAttrValues));
                     } else {
                         attrs.remove(userModelAttrName);
