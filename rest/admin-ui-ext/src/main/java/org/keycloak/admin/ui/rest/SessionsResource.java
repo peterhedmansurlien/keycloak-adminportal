@@ -11,6 +11,7 @@ import org.keycloak.admin.ui.rest.model.SessionRepresentation;
 import org.keycloak.common.util.Time;
 import org.keycloak.models.AuthenticatedClientSessionModel;
 import org.keycloak.models.ClientModel;
+import org.keycloak.models.UserModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserSessionModel;
@@ -110,9 +111,18 @@ public class SessionsResource {
         rep.setId(session.getId());
         rep.setStart(Time.toMillis(session.getStarted()));
         rep.setLastAccess(Time.toMillis(session.getLastSessionRefresh()));
-        rep.setUsername(session.getUser().getUsername());
-        rep.setUserId(session.getUser().getId());
         rep.setIpAddress(session.getIpAddress());
+
+        UserModel sessionUser = session.getUser();
+
+        if(sessionUser != null) {
+            rep.setUsername(sessionUser.getUsername());
+            rep.setUserId(sessionUser.getId());
+        } else {
+            rep.setUsername("unknown");
+            rep.setUserId("unknown");
+        }
+
         rep.setType(type);
         for (AuthenticatedClientSessionModel clientSession : session.getAuthenticatedClientSessions().values()) {
             ClientModel client = clientSession.getClient();
